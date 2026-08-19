@@ -2,7 +2,7 @@
 %% Possible paper sizes: a0, a0b, a1, a2, a3, a4.
 %% Possible orientations: portrait, landscape
 %% Font sizes can be changed using the scale option.
-\usepackage[size=a0,orientation=portrait,scale=1.1]{beamerposter}
+\usepackage[size=a0,orientation=portrait,scale=1.25]{beamerposter}
 
 \usetheme{gemini}
 \usecolortheme{seagull}
@@ -26,17 +26,22 @@
 \usepackage{booktabs}
 \usepackage{tikz}
 \usepackage{pgfplots}
+\usetikzlibrary{arrows.meta,positioning,calc}
 
 % ====================
 % Lengths
 % ====================
 
-% If you have N columns, choose \sepwidth and \colwidth such that
-% (N+1)*\sepwidth + N*\colwidth = \paperwidth
+% Two unequal columns: the left column (background / related work) is
+% narrower, the right column (methodology / evaluation / takeaways) is
+% wider, since it carries the more important content.
+% 3*\sepwidth + \colwidthleft + \colwidthright = \paperwidth
 \newlength{\sepwidth}
-\newlength{\colwidth}
+\newlength{\colwidthleft}
+\newlength{\colwidthright}
 \setlength{\sepwidth}{0.03\paperwidth}
-\setlength{\colwidth}{0.45\paperwidth}
+\setlength{\colwidthleft}{0.40\paperwidth}
+\setlength{\colwidthright}{0.51\paperwidth}
 
 \newcommand{\separatorcolumn}{\begin{column}{\sepwidth}\end{column}}
 
@@ -44,21 +49,9 @@
 % Logo (optional)
 % ====================
 
-% LaTeX logo taken from https://commons.wikimedia.org/wiki/File:LaTeX_logo.svg
 % use this to include logos on the left and/or right side of the header:
-\logoright{\includegraphics[height=5cm]{logos/UOfT_logo.png}}
-\logoleft{\includegraphics[height=5cm]{logos/tcig_final.png}}
-
-% ====================
-% Footer (optional)
-% ====================
-
-\footercontent{
-	ABC Conference 2025, Tokyo, Japan \hfill
-	\insertdate \hfill
-	\href{mailto:myemail@exampl.com}{\texttt{myemail@example.com}}
-}
-% (can be left out to remove footer)
+\logoleft{\includegraphics[height=5cm]{logos/UOfT_logo.png}}
+\logoright{\includegraphics[height=5cm]{logos/tcig_final.png}}
 
 % ====================
 % My own customization
@@ -74,263 +67,237 @@
 \addbibresource{refs.bib}
 \renewcommand{\pgfuseimage}[1]{\includegraphics[scale=2.0]{#1}}
 
+% ====================
+% Design elements re-used across blocks
+% ====================
+
+% A highlighted "callout" box with a coloured left rule, used for the
+% key equations / convergence conditions that should catch the eye.
+\newtcolorbox{eqbox}{%
+	colback=white, colframe=BlockHeader,
+	boxrule=0pt, leftrule=3pt, arc=0pt, outer arc=0pt,
+	boxsep=4pt, left=10pt, right=8pt, top=6pt, bottom=6pt
+}
+
+% A dashed placeholder box standing in for a not-yet-measured figure.
+\newcommand{\placeholderfig}[3]{%
+	\begin{tikzpicture}
+		\node[draw, dashed, thick, gray, minimum width=#1, minimum height=#2,
+			align=center, text width=0.9*#1, font=\itshape\small, gray] {#3};
+	\end{tikzpicture}%
+}
+
 \title{A Source-Iteration Framework for Monte Carlo Helmholtz Solvers via Walk-on-Boundary}
 
-\author{Pratham Gupta \inst{1} \and Prashanth Shyamala \inst{2} \and Benjamin Attal \inst{2}}
+\author{Pratham Gupta, Prashanth Shyamala}
 
-\institute[shortinst]{\inst{1} Indian Institute of Science \samelineand \inst{2} University of Toronto}
-
-\date{January 01, 2025}
+\institute{~}
 
 \begin{document}
-	
-\begin{frame}[t]
-	
-	% \begin{columns}[t]
-	
-	% \begin{column}{2\colwidth+\sepwidth}
-	% \begin{block}{A block title}
-		
-	% 	This poster was made by modifying the Gemini Beamer Poster Theme~\parencite{Athalye2018} and the Beamer \texttt{seagull} Color Theme.
-	% 	Some block contents, followed by a diagram, followed by a dummy paragraph.
-		
-	% 	\begin{figure}
-	% 		\centering
-	% 		\begin{tikzpicture}[scale=6]
-	% 			\draw[step=0.25cm,color=gray] (-1,-1) grid (1,1);
-	% 			\draw (1,0) -- (0.2,0.2) -- (0,1) -- (-0.2,0.2) -- (-1,0)
-	% 			-- (-0.2,-0.2) -- (0,-1) -- (0.2,-0.2) -- cycle;
-	% 		\end{tikzpicture}
-	% 		\caption{A figure caption.}
-	% 	\end{figure}
-		
-	% 	Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi ultricies
-	% 	eget libero ac ullamcorper. Integer et euismod ante. Aenean vestibulum
-	% 	lobortis augue, ut lobortis turpis rhoncus sed. Proin feugiat nibh a
-	% 	lacinia dignissim. Proin scelerisque, risus eget tempor fermentum, ex
-	% 	turpis condimentum urna, quis malesuada sapien arcu eu purus.
-		
-	% \end{block}
-	% \end{column}
 
-	% \end{columns}
+% Force reference numbering to match the intended [1]-[5] order.
+\nocite{Sawhney2020,Sugimoto2023,Osnabrugge2016,Yang2017,Jakob2022}
+
+\begin{frame}[t]
 
 	\begin{columns}[t]
 		\separatorcolumn
-		
-		\begin{column}{\colwidth}
 
-            \begin{block}{Motivation}
-				
-				Simulating time-harmonic waves — sound, light, seismic — means solving $(\Delta + k^2)u = -f$. At the frequencies that matter, every standard route is expensive, and the grid-free Monte Carlo route does not converge at all.
-				
-				\begin{enumerate}
-					\item \textbf{Grid solvers pay a pollution penalty.}
-					\item \textbf{Monte Carlo sidesteps both:}. Aliquam blandit nec
-					massa ac sollicitudin. Curabitur cursus, metus nec imperdiet bibendum,
-					velit lectus faucibus dolor, quis gravida metus mauris gravida turpis.
-				\end{enumerate}
-				
+		\begin{column}{\colwidthleft}
 
-				
+			\begin{block}{The problem}
+
+				Simulating time-harmonic waves --- sound, light, seismic --- means solving $(\Delta + k^2)u = -f$. At the frequencies that matter, every standard route is expensive, and the grid-free Monte Carlo route does not converge at all.
+
+				\begin{itemize}
+					\item \textbf{Grid solvers pay a pollution penalty.} DOFs must grow faster than $k^d$, and adjoint / FWI inversion holds $O(k^d)$ wavefield memory per frequency.
+					\item \textbf{Monte Carlo sidesteps both:} grid-free and output-sensitive --- evaluate $u$ only where asked; no mesh, no global system, no stored field \parencite{Sawhney2020}. But the operator is sign-indefinite, so its convergence theory fails.
+				\end{itemize}
+
 			\end{block}
-			
-			% \begin{thm}{A \texttt{tcolorbox} theorem block containing a list}{}
-				
-			% 	Nam vulputate nunc felis, non condimentum lacus porta ultrices. Nullam sed
-			% 	sagittis metus. Etiam consectetur gravida urna quis suscipit.
-				
-			% 	\begin{itemize}
-			% 		\item \textbf{Mauris tempor} risus nulla, sed ornare
-			% 		\item \textbf{Libero tincidunt} a duis congue vitae
-			% 		\item \textbf{Dui ac pretium} morbi justo neque, ullamcorper
-			% 	\end{itemize}
-				
-			% 	Eget augue porta, bibendum venenatis tortor.
-				
-			% \end{thm}
-			
-			% \begin{alertblock}{A highlighted block}
-				
-			% 	This block catches your eye, so \textbf{important stuff} should probably go
-			% 	here.
-				
-			% 	Curabitur eu libero vehicula, cursus est fringilla, luctus est. Morbi
-			% 	consectetur mauris quam, at finibus elit auctor ac. Aliquam erat volutpat.
-			% 	Aenean at nisl ut ex ullamcorper eleifend et eu augue. Aenean quis velit
-			% 	tristique odio convallis ultrices a ac odio.
-				
-			% 	\begin{itemize}
-			% 		\item \textbf{Fusce dapibus tellus} vel tellus semper finibus. In
-			% 		consequat, nibh sed mattis luctus, augue diam fermentum lectus.
-			% 		\item \textbf{In euismod erat metus} non ex. Vestibulum luctus augue in
-			% 		mi condimentum, at sollicitudin lorem viverra.
-			% 	\end{itemize}
-			
-			% 	\begin{enumerate}
-			% 		\item \textbf{Morbi mauris purus}, egestas at vehicula et, convallis
-			% 		accumsan orci. Orci varius natoque penatibus et magnis dis parturient
-			% 		montes, nascetur ridiculus mus.
-			% 		\item \textbf{Cras vehicula blandit urna ut maximus}. Aliquam blandit nec
-			% 		massa ac sollicitudin. Curabitur cursus, metus nec imperdiet bibendum,
-			% 		velit lectus faucibus dolor, quis gravida metus mauris gravida turpis.
-			% 	\end{enumerate}
-				
-			% 	Aenean tincidunt risus eros, at gravida lorem sagittis vel. Vestibulum ante
-			% 	ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae.
-				
-			% \end{alertblock}
-			
-			% \begin{defbox}{A block containing an enumerated list}{}
-				
-			% 	Vivamus congue volutpat elit non semper. Praesent molestie nec erat ac
-			% 	interdum. In quis suscipit erat. \textbf{Phasellus mauris felis, molestie
-			% 		ac pharetra quis}, tempus nec ante. Donec finibus ante vel purus mollis
-			% 	fermentum. Sed felis mi, pharetra eget nibh a, feugiat eleifend dolor. Nam
-			% 	mollis condimentum purus quis sodales. Nullam eu felis eu nulla eleifend
-			% 	bibendum nec eu lorem. Vivamus felis velit, volutpat ut facilisis ac,
-			% 	commodo in metus.
-				
-			% 	\begin{enumerate}
-			% 		\item \textbf{Morbi mauris purus}, egestas at vehicula et, convallis
-			% 		accumsan orci. Orci varius natoque penatibus et magnis dis parturient
-			% 		montes, nascetur ridiculus mus.
-			% 		\item \textbf{Cras vehicula blandit urna ut maximus}. Aliquam blandit nec
-			% 		massa ac sollicitudin. Curabitur cursus, metus nec imperdiet bibendum,
-			% 		velit lectus faucibus dolor, quis gravida metus mauris gravida turpis.
-			% 		\item \textbf{Vestibulum et massa diam}. Phasellus fermentum augue non
-			% 		nulla accumsan, non rhoncus lectus condimentum.
-			% 	\end{enumerate}
-				
-			% \end{defbox}
-			
-			\begin{block}{Walk on Boundary}
-				
-				A random walk that lives on the boundary: each hop samples a new boundary point from the Green's-function kernel, and the walk's weighted contributions estimate the boundary density 
 
-				
-				\begin{enumerate}
-					\item \textbf{Morbi mauris purus}, egestas at vehicula et, convallis
-					accumsan orci. Orci varius natoque penatibus et magnis dis parturient
-					montes, nascetur ridiculus mus.
-					\item \textbf{Cras vehicula blandit urna ut maximus}. Aliquam blandit nec
-					massa ac sollicitudin. Curabitur cursus, metus nec imperdiet bibendum,
-					velit lectus faucibus dolor, quis gravida metus mauris gravida turpis.
-				\end{enumerate}
-				
+			\begin{block}{What is Walk-on-Boundary?}
+
+				A random walk that lives on the boundary: each hop samples a new boundary point from the Green's-function kernel, and the walk's weighted contributions estimate the boundary density $\mu$.
+
 				\begin{figure}
 					\centering
-					\includegraphics[]{Images/Helmholtz WoB Poster-selection.png}
-					\caption{Walk on Boundary}
+					\includegraphics[width=0.75\linewidth]{Images/Helmholtz WoB Poster-selection.png}
 				\end{figure}
-				
-			\end{block}
-			
-		\end{column}
-	
-		\separatorcolumn
-		
-		\begin{column}{\colwidth}
-			
-			\begin{block}{Nam cursus consequat egestas}
-				
+
 				\begin{itemize}
-					\item \textbf{Sed consequat} id ante vel efficitur. Praesent congue massa
-					sed est scelerisque, elementum mollis augue iaculis.
-					\begin{itemize}
-						\item In sed est finibus, vulputate
-						nunc gravida, pulvinar lorem. In maximus nunc dolor, sed auctor eros
-						porttitor quis.
-						\item Fusce ornare dignissim nisi. Nam sit amet risus vel lacus
-						tempor tincidunt eu a arcu.
-						\item Donec rhoncus vestibulum erat, quis aliquam leo
-						gravida egestas.
-					\end{itemize}
-					\item \textbf{Sed luctus, elit sit amet} dictum maximus, diam dolor
-					faucibus purus, sed lobortis justo erat id turpis.
-					\item \textbf{Pellentesque facilisis dolor in leo} bibendum congue.
-					Maecenas congue finibus justo, vitae eleifend urna facilisis at.
+					\item Each hop $y_i \to y_{i+1}$ is one application of the boundary operator $A$ --- a single unbiased sample, no mesh anywhere.
+					\item Classic WoB chains many hops to estimate $A^n$; my method takes \textbf{one hop per iteration} instead.
 				\end{itemize}
-				
+
+				\heading{Why it breaks for Helmholtz}
+
+				\begin{eqbox}
+					\[
+						(I - A)\mu = b, \qquad \mu = \sum_{n \ge 0} A^n b \qquad \text{converges only if } \rho(A) < 1
+					\]
+				\end{eqbox}
+
+				\begin{itemize}
+					\item At moderate to high $k$ the indefinite kernel gives $\rho(A) \ge 1$: the series \textbf{diverges}, and deep walks estimating $A^n$ have unbounded variance --- the failure the Convergent Born Series \parencite{Osnabrugge2016} first exposed.
+				\end{itemize}
+
 			\end{block}
-			
-			\begin{exampleblock}{An example block containing some math}{}
-				
-				Nullam non est elit. In eu ornare justo. Maecenas porttitor sodales lacus,
-				ut cursus augue sodales ac.
-				
-				$$
-				\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}
-				$$
-				
-				\begin{enumerate}
-					\item \textbf{Morbi mauris purus}, egestas at vehicula et, convallis
-					accumsan orci. Orci varius natoque penatibus et magnis dis parturient
-					montes, nascetur ridiculus mus.
-					\item \textbf{Cras vehicula blandit urna ut maximus}. Aliquam blandit nec
-					massa ac sollicitudin. Curabitur cursus, metus nec imperdiet bibendum,
-					velit lectus faucibus dolor, quis gravida metus mauris gravida turpis.
-				\end{enumerate}
-				
-				\heading{A heading inside a block}
-				
-				Praesent consectetur mi $x^2 + y^2$ metus, nec vestibulum justo viverra
-				nec. Proin eget nulla pretium, egestas magna aliquam, mollis neque. Vivamus
-				dictum $\mathbf{u}^\intercal\mathbf{v}$ sagittis odio, vel porta erat
-				congue sed. Maecenas ut dolor quis arcu auctor porttitor.
-				
-				\heading{Another heading inside a block}
-				
-				Sed augue erat, scelerisque a purus ultricies, placerat porttitor neque.
-				Donec $P(y \mid x)$ fermentum consectetur $\nabla_x P(y \mid x)$ sapien
-				sagittis egestas. Duis eget leo euismod nunc viverra imperdiet nec id
-				justo.
-				
-			\end{exampleblock}
-			
-			\begin{block}{Nullam vel erat at velit convallis laoreet}
-				
-				Class aptent taciti sociosqu ad litora torquent per conubia nostra, per
-				inceptos himenaeos. Phasellus libero enim, gravida sed erat sit amet,
-				scelerisque congue diam. Fusce dapibus dui ut augue pulvinar iaculis.
-				
-				\begin{table}
-					\centering
-					\begin{tabular}{l r r c}
-						\toprule
-						\textbf{First column} & \textbf{Second column} & \textbf{Third column} & \textbf{Fourth} \\
-						\midrule
-						Foo & 13.37 & 384,394 & $\alpha$ \\
-						Bar & 2.17 & 1,392 & $\beta$ \\
-						Baz & 3.14 & 83,742 & $\delta$ \\
-						Qux & 7.59 & 974 & $\gamma$ \\
-						\bottomrule
-					\end{tabular}
-					\caption{A table caption.}
-				\end{table}
-				
-				Donec quis posuere ligula. Nunc feugiat elit a mi malesuada consequat. Sed
-				imperdiet augue ac nibh aliquet tristique. Aenean eu tortor vulputate,
-				eleifend lorem in, dictum urna. Proin auctor ante in augue tincidunt
-				tempor. Proin pellentesque vulputate odio, ac gravida nulla posuere
-				efficitur. Aenean at velit vel dolor blandit molestie. Mauris laoreet
-				commodo quam, non luctus nibh ullamcorper in. Class aptent taciti sociosqu
-				ad litora torquent per conubia nostra, per inceptos himenaeos.
-				
-				Nulla varius finibus volutpat. Mauris molestie lorem tincidunt, iaculis
-				libero at, gravida ante. Phasellus at felis eu neque suscipit suscipit.
-				Integer ullamcorper, dui nec pretium ornare, urna dolor consequat libero,
-				in feugiat elit lorem euismod lacus. Pellentesque sit amet dolor mollis,
-				auctor urna non, tempus sem.
-				
+
+			\begin{block}{Related Work}
+
+				\begin{itemize}
+					\item \textbf{Grid-free MC solvers.} WoS for (screened) Poisson \parencite{Sawhney2020}; Walk-on-Stars adds Neumann and Robin data.
+					\item \textbf{Walk-on-Boundary.} Practical boundary-integral estimator for Dirichlet / Neumann / Robin data \parencite{Sugimoto2023}; convergence guarantees are missing for indefinite operators.
+					\item \textbf{Convergent Born Series.} Complex wavenumber $k_0^2 + i\varepsilon$ and $\gamma = (i/\varepsilon)V$ force $\rho(M) < 1$ unconditionally \parencite{Osnabrugge2016} --- the deterministic precedent for my shift.
+					\item \textbf{Closest precedent.} WoS for Helmholtz / Yukawa via the Duffin correspondence \parencite{Yang2017} --- but tied to constant potentials.
+				\end{itemize}
+
 			\end{block}
-			
-			
+
 			\begin{block}{References}
 				\printbibliography[heading=none]
 			\end{block}
+
 		\end{column}
-		
+
+		\separatorcolumn
+
+		\begin{column}{\colwidthright}
+
+			\begin{block}{Methodology}
+
+				\textbf{The source iteration, one turn of the loop} \hfill {\small\itshape one iteration = one operator apply}
+
+				\vspace{1ex}
+				\begin{figure}
+					\centering
+					\begin{tikzpicture}[
+						node distance=12mm and 12mm,
+						box/.style={draw, rounded corners, align=center, minimum height=2.3cm,
+							minimum width=4.4cm, text width=4.1cm, font=\small, fill=white},
+						hl/.style={box, draw=BlockHeader, line width=1.2pt, fill=BlockHeader!8},
+						>=Latex
+					]
+						\node[box] (mu) {current density $\mu^n$};
+						\node[hl, right=of mu] (wob) {\textbf{one forward WoB step}\\[3pt] sample $y \sim p$,\\ estimate $A\mu^n$};
+						\node[box, right=of wob] (res) {residual\\[2pt] $r^n = (I-A)\mu^n - b$};
+						\node[box, right=of res] (shift) {complex shift\\[2pt] $\mu^{n+1} = \mu^n - \omega r^n$};
+
+						\draw[->] (mu) -- (wob);
+						\draw[->] (wob) -- (res);
+						\draw[->] (res) -- (shift);
+
+						\draw[->] (shift.south) .. controls +(0,-3.8) and +(0,-3.8) .. (mu.south);
+						\node[font=\footnotesize\itshape, align=center]
+							at ($(mu.south)!0.5!(shift.south) + (0,-3.2)$)
+							{repeat: variance capped, no deep walks};
+
+						\draw[->, dashed] (res.north) .. controls +(0,3.6) and +(0,3.6) .. (shift.north);
+						\node[font=\footnotesize\itshape, align=center, text width=5.2cm]
+							at ($(res.north)!0.5!(shift.north) + (0,2.9)$)
+							{stop when $\|r^n\|$ is small $\to$ evaluate $u(x)$};
+					\end{tikzpicture}
+				\end{figure}
+
+				\begin{eqbox}
+					\begin{align*}
+						\mu^{n+1} &= \mu^n - \omega\left[(I-A)\mu^n - b\right] \\
+						M &= I - \omega(I-A), \qquad \rho(M) < 1 \\
+						\widehat{A\mu^n} &= \frac{K(x,y)\,\mu^n(y)}{p(y)}, \qquad y \sim p
+					\end{align*}
+				\end{eqbox}
+
+				\begin{figure}
+					\centering
+					\begin{tikzpicture}[scale=1.05]
+						\draw[gray!40] (-1.6,0) -- (2.3,0);
+						\draw[gray!40] (0,-1.5) -- (0,1.5);
+						\draw[dashed, BlockHeader] (1,0) circle (1);
+						\fill[BlockHeader] (1,0) circle (1.2pt);
+						\foreach \p in {(1.9,0.9),(2.1,-0.5),(1.5,-1.2),(-1.0,0.6),(2.3,0.4)}
+							\fill[red!70!black] \p circle (2.5pt);
+						\node[below] at (0.3,-1.6) {\small $\rho(A) \ge 1$: diverges};
+					\end{tikzpicture}
+					\hspace{2cm}
+					\begin{tikzpicture}[scale=1.05]
+						\draw[gray!40] (-1.6,0) -- (2.3,0);
+						\draw[gray!40] (0,-1.5) -- (0,1.5);
+						\draw[dashed, BlockHeader] (1,0) circle (1);
+						\fill[BlockHeader] (1,0) circle (1.2pt);
+						\foreach \p in {(1.3,0.4),(0.7,-0.3),(1.4,-0.2),(0.9,0.5)}
+							\fill[blue!60!black] \p circle (2.5pt);
+						\node[below] at (0.3,-1.6) {\small after $\omega$-shift: $\rho(M) < 1$};
+					\end{tikzpicture}
+				\end{figure}
+
+				{\small\itshape A complex $\omega$ rotates and rescales the spectrum of $I-A$ into the unit disk about $1$ --- the stochastic analog of the CBS $\varepsilon$-shift \parencite{Osnabrugge2016}.}
+
+				\vspace{1ex}
+				{\small\itshape One boundary sample per apply: unbiased, matrix-free, variance independent of $n$.}
+
+				\begin{itemize}
+					\item \textbf{No deep walks.} Every operator apply is one forward WoB step, so per-iteration variance is capped --- the exponential blow-up of estimating $A^n$ disappears.
+					\item \textbf{Warm starts.} Bootstrap $\mu^0$ from a geometrical-optics / Kirchhoff approximation, a neighbouring frequency, or a learned cache $\hat\mu_\theta$ trained by a semi-gradient residual loss.
+					\item \textbf{Implementation.} Matrix-free applies and forward walks on Dr.Jit \parencite{Jakob2022} with Mitsuba-style ray tracing: JIT-compiled, GPU/CPU-retargetable, differentiable.
+				\end{itemize}
+
+			\end{block}
+
+			\begin{block}{Evaluation}
+
+				{\small\itshape What I will trust as evidence --- figures and table are placeholders, not measurements.}
+
+				\vspace{1ex}
+				\begin{columns}[t]
+					\begin{column}{0.48\colwidthright}
+						\begin{figure}
+							\centering
+							\placeholderfig{6cm}{4cm}{Figure 1 --- residual vs.\ iteration (placeholder)}
+							\caption{$\log\|(I-A)\mu^n - b\|$ vs.\ iteration $n$, source iteration against the Neumann series over $\rho(A) \in \{0.5,\dots,1.5\}$. Falsifiable prediction: Neumann curves turn upward at $\rho \ge 1$; source iteration descends at every $\rho$.}
+						\end{figure}
+					\end{column}
+					\begin{column}{0.48\colwidthright}
+						\begin{figure}
+							\centering
+							\placeholderfig{6cm}{4cm}{Figure 2 --- $\rho(M)$ over the complex $\omega$ plane (placeholder)}
+							\caption{Measured decay rate $\rho(M)$ as a function of $\{\mathrm{Re}\,\omega, \mathrm{Im}\,\omega\}$. Prediction: a convergent basin bounded by the contour $\rho(M)=1$, with an optimum $\omega^\star$ inside it.}
+						\end{figure}
+					\end{column}
+				\end{columns}
+
+				\begin{table}
+					\centering
+					\begin{tabular}{lcccc}
+						\toprule
+						\textbf{Method} & $\rho = 0.7$ & $\rho = 0.95$ & $\rho = 1.05$ & $\rho = 1.3$ \\
+						\midrule
+						Neumann-series WoB & converges (slow) & converges (very slow) & \textcolor{red}{diverges} & \textcolor{red}{diverges} \\
+						Source iteration (tuned $\omega$) & converges & converges & converges & converges \\
+						\bottomrule
+					\end{tabular}
+					\caption{(Illustrative placeholder.) Outcome vs.\ spectral-radius sweep --- the crossover at $\rho = 1$ is the test.}
+				\end{table}
+
+				\begin{itemize}
+					\item \textbf{Reference solutions.} Analytic fields where they exist, otherwise a dense deterministic boundary-element solve --- error reported against both, never against a single baseline.
+					\item \textbf{Controls.} Sweep $\rho(A)$ across the $\rho = 1$ boundary; report per-iteration variance and sample counts, so convergence claims cannot hide behind extra samples.
+				\end{itemize}
+
+			\end{block}
+
+			\begin{block}{What it means}
+
+				\begin{enumerate}
+					\item \textbf{Convergence becomes a design choice, not a property of the domain.} One complex scalar $\omega$ buys $\rho(M) < 1$ where the Neumann series has none.
+					\item \textbf{Robustness is paid for in rate.} Following the CBS law $\Delta r = 2k_0/\varepsilon$, a larger shift guarantees convergence but slows each iteration --- warm starts buy the rate back near $\rho \approx 1$.
+					\item \textbf{Open questions I want to discuss.} How far does a scalar $\omega$ stretch before an operator-valued shift is needed for heterogeneous media (Lippmann--Schwinger), and can $\hat\mu_\theta$ warm-start inverse problems without biasing gradients?
+				\end{enumerate}
+
+			\end{block}
+
+		\end{column}
+
 		\separatorcolumn
 	\end{columns}
 \end{frame}

@@ -3,13 +3,10 @@
 % ====================
 
 \usepackage[backend=biber,
-	bibstyle=authoryear,
-	citestyle=authoryear,
-	style=authoryear,
-	maxcitenames=2,
+	style=numeric,
+	citestyle=numeric,
 	maxbibnames=20, % limit the length of list of names (authors/editors/etc.)
-	sorting=ydnt, % sort references by year (descending), name, title
-	dashed=false, % show authors instead of dash in publications having the same authors
+	sorting=none, % list references in citation order, like [1], [2], ...
 	giveninits=true % render authors' given name initials and not the full given names
 ]{biblatex}
 %% Biblatex with Beamer bibliography icons
