@@ -116,18 +116,21 @@
 
 			\end{block}
 
-			\begin{block}{What is Walk-on-Boundary?}
+			\begin{block}{Walk-on-Boundary}
 
-				A random walk that lives on the boundary: each hop samples a new boundary point from the Green's-function kernel, and the walk's weighted contributions estimate the boundary density $\mu$.
+				A grid-free Monte Carlo method that recasts a boundary value problem as a boundary integral equation $(I - A)\,\mu = b,$ where $\mu$ is an unknown density living on $\partial\Omega$ and $A$ is a boundary integral operator built from the PDE's Green's function $G$
 
+                
 				\begin{figure}
 					\centering
-					\includegraphics[width=0.75\linewidth]{Images/Helmholtz WoB Poster-selection.png}
+					\includegraphics[width=0.55\linewidth]{Images/Helmholtz WoB Poster-selection.png}
 				\end{figure}
 
 				\begin{itemize}
-					\item Each hop $y_i \to y_{i+1}$ is one application of the boundary operator $A$ --- a single unbiased sample, no mesh anywhere.
-					\item Classic WoB chains many hops to estimate $A^n$; my method takes \textbf{one hop per iteration} instead.
+                   \item The density is estimated by unbiased random walks that hop only between points on $\partial\Omega$ so the walk implicitly realizes the Neumann series $\mu \;=\; \sum_{n \ge 0} A^n b,$ without ever discretizing the interior of $\Omega$.
+    
+                    \item Once $\mu$ is estimated, the solution at any interior query point $x \in \Omega$ is recovered by a single boundary integral, $$u(x) \;=\; \int_{\partial\Omega} K(x,y)\,\mu(y)\,dS_y,$$ making WoB storage-free, embarrassingly parallel across queries, and naturally suited to complex geometry.
+                
 				\end{itemize}
 
 				\heading{Why it breaks for Helmholtz}
@@ -175,7 +178,7 @@
 					\begin{tikzpicture}[
 						node distance=12mm and 12mm,
 						box/.style={draw, rounded corners, align=center, minimum height=2.3cm,
-							minimum width=4.4cm, text width=4.1cm, font=\small, fill=white},
+							minimum width=5cm, text width=9cm, font=\medium, fill=white},
 						hl/.style={box, draw=BlockHeader, line width=1.2pt, fill=BlockHeader!8},
 						>=Latex
 					]
@@ -188,12 +191,13 @@
 						\draw[->] (wob) -- (res);
 						\draw[->] (res) -- (shift);
 
-						\draw[->] (shift.south) .. controls +(0,-3.8) and +(0,-3.8) .. (mu.south);
+						% \draw[->] (shift.south) .. controls +(0,-3.8) and +(0,-3.8) .. (mu.south);
+                        \draw[->] (shift.south) -- ++(0,-20mm) -| (mu.south);
+
 						\node[font=\footnotesize\itshape, align=center]
 							at ($(mu.south)!0.5!(shift.south) + (0,-3.2)$)
 							{repeat: variance capped, no deep walks};
 
-						\draw[->, dashed] (res.north) .. controls +(0,3.6) and +(0,3.6) .. (shift.north);
 						\node[font=\footnotesize\itshape, align=center, text width=5.2cm]
 							at ($(res.north)!0.5!(shift.north) + (0,2.9)$)
 							{stop when $\|r^n\|$ is small $\to$ evaluate $u(x)$};
