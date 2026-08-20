@@ -39,9 +39,9 @@
 \newlength{\sepwidth}
 \newlength{\colwidthleft}
 \newlength{\colwidthright}
-\setlength{\sepwidth}{0.03\paperwidth}
-\setlength{\colwidthleft}{0.40\paperwidth}
-\setlength{\colwidthright}{0.51\paperwidth}
+\setlength{\sepwidth}{0.015\paperwidth}
+\setlength{\colwidthleft}{0.367\paperwidth}
+\setlength{\colwidthright}{0.588\paperwidth}
 
 \newcommand{\separatorcolumn}{\begin{column}{\sepwidth}\end{column}}
 
@@ -52,6 +52,13 @@
 % use this to include logos on the left and/or right side of the header:
 \logoleft{\includegraphics[height=5cm]{logos/UOfT_logo.png}}
 \logoright{\includegraphics[height=5cm]{logos/tcig_final.png}}
+
+% ====================
+% Poster background
+% ====================
+\usebackgroundtemplate{%
+	\includegraphics[width=\paperwidth,height=\paperheight]{Images/rectangle_piecewise_g_solution.png}
+}
 
 % ====================
 % My own customization
@@ -65,6 +72,7 @@
 
 %% Reference Sources
 \addbibresource{refs.bib}
+\renewcommand*{\bibfont}{\footnotesize}
 \renewcommand{\pgfuseimage}[1]{\includegraphics[scale=2.0]{#1}}
 
 % ====================
@@ -89,9 +97,9 @@
 
 \title{A Source-Iteration Framework for Monte Carlo Helmholtz Solvers via Walk-on-Boundary}
 
-\author{Pratham Gupta, Prashanth Shyamala}
+\author{Pratham Gupta\inst{1} \and Prashanth Shyamala\inst{2} \and Benjamin Attal\inst{2} \and Jorge~Garcia-Pueyo\inst{3} \and David Lindell\inst{2}}
 
-\institute{~}
+\institute{\textsuperscript{1}Indian Institute of Science \quad \textsuperscript{2}University of Toronto \quad \textsuperscript{3}University of Zaragoza}
 
 \begin{document}
 
@@ -107,31 +115,27 @@
 
 			\begin{block}{The problem}
 
-				Simulating time-harmonic waves --- sound, light, seismic --- means solving $(\Delta + k^2)u = -f$. At the frequencies that matter, every standard route is expensive, and the grid-free Monte Carlo route does not converge at all.
+				We solve the inhomogeneous Helmholtz wave equation $(\Delta + k^2)u = -f$, the PDE governing time-harmonic waves --- sound, light, seismic.
 
 				\begin{itemize}
-					\item \textbf{Grid solvers pay a pollution penalty.} DOFs must grow faster than $k^d$, and adjoint / FWI inversion holds $O(k^d)$ wavefield memory per frequency.
-					\item \textbf{Monte Carlo sidesteps both:} grid-free and output-sensitive --- evaluate $u$ only where asked; no mesh, no global system, no stored field \parencite{Sawhney2020}. But the operator is sign-indefinite, so its convergence theory fails.
+					\item \textbf{FEM/FDM discretize the entire domain.} Holding accuracy as $k \to \infty$ needs DOFs growing faster than $k^d$ (the pollution effect) --- slow, memory-heavy, and the indefinite linear system is hostile to solve. Adjoint/FWI-style inversion must additionally store the full wavefield, $O(k^d)$ per frequency, and runs out of memory at scale.
+					\item \textbf{Monte Carlo has no global dependence.} Grid-free, output-sensitive estimators --- Walk-on-Spheres/Walk-on-Boundary \parencite{Sawhney2020} --- evaluate $u$ at any query point directly, with no mesh and no global linear system to assemble or store.
+					\item \textbf{But existing MC methods fail for Helmholtz.} The boundary operator $A$ is sign-indefinite, so $\rho(A) \ge 1$ and the Neumann series $\mu = \sum_{n\ge0} A^n b$ diverges --- the walk never converges.
 				\end{itemize}
 
 			\end{block}
 
-			\begin{block}{Walk-on-Boundary}
+			\begin{block}{Walk on Boundary}
 
-				A grid-free Monte Carlo method that recasts a boundary value problem as a boundary integral equation $(I - A)\,\mu = b,$ where $\mu$ is an unknown density living on $\partial\Omega$ and $A$ is a boundary integral operator built from the PDE's Green's function $G$
+				Walk-on-Boundary recasts the BVP as an integral equation along $\partial\Omega$,
+				$$\mu(x) - \int_{\partial\Omega} K(x,y)\,\mu(y)\,dS_y = b(x), \quad x \in \partial\Omega$$
+				$$\big(\text{compactly } (I-A)\mu = b\big),$$
+				and estimates the density $\mu$ with unbiased random walks on $\partial\Omega$ that realize the Neumann series $\mu = \sum_{n \ge 0} A^n b$, without ever discretizing the interior of $\Omega$.
 
-                
 				\begin{figure}
 					\centering
 					\includegraphics[width=0.55\linewidth]{Images/Helmholtz WoB Poster-selection.png}
 				\end{figure}
-
-				\begin{itemize}
-                   \item The density is estimated by unbiased random walks that hop only between points on $\partial\Omega$ so the walk implicitly realizes the Neumann series $\mu \;=\; \sum_{n \ge 0} A^n b,$ without ever discretizing the interior of $\Omega$.
-    
-                    \item Once $\mu$ is estimated, the solution at any interior query point $x \in \Omega$ is recovered by a single boundary integral, $$u(x) \;=\; \int_{\partial\Omega} K(x,y)\,\mu(y)\,dS_y,$$ making WoB storage-free, embarrassingly parallel across queries, and naturally suited to complex geometry.
-                
-				\end{itemize}
 
 				\heading{Why it breaks for Helmholtz}
 
@@ -159,6 +163,8 @@
 			\end{block}
 
 			\begin{block}{References}
+				\setlength{\bibitemsep}{0pt}
+				\setlength{\bibparsep}{0pt}
 				\printbibliography[heading=none]
 			\end{block}
 
@@ -176,9 +182,10 @@
 				\begin{figure}
 					\centering
 					\begin{tikzpicture}[
+						remember picture,
 						node distance=12mm and 12mm,
 						box/.style={draw, rounded corners, align=center, minimum height=2.3cm,
-							minimum width=5cm, text width=9cm, font=\medium, fill=white},
+							minimum width=5cm, text width=9cm, fill=white},
 						hl/.style={box, draw=BlockHeader, line width=1.2pt, fill=BlockHeader!8},
 						>=Latex
 					]
@@ -204,6 +211,64 @@
 					\end{tikzpicture}
 				\end{figure}
 
+				\definecolor{PosterNavy}{HTML}{17375E}
+				\definecolor{PosterBlue}{HTML}{1F497D}
+				\definecolor{PosterRed}{HTML}{A11B1B}
+				\begin{columns}[t]
+					\begin{column}{0.32\colwidthright}
+						\centering
+						\tikz[remember picture]\node[font=\small\itshape] (cachedas) {cached as:};\par\vspace{4pt}
+						\begin{tikzpicture}[scale=2.05, baseline=(current bounding box.north)]
+							\node[font=\bfseries\small, PosterRed] at (2,0.5) {array $\mu$, $O(M)$};
+							\foreach \i in {0,...,8} {
+								\pgfmathsetmacro{\fillc}{\i==2 ? "PosterRed!55!white" : "PosterBlue!8!white"}
+					A			\draw[PosterBlue, thin, fill=\fillc] (\i*0.45,-0.75) rectangle ++(0.4,0.75);
+							}
+						\end{tikzpicture}\par\vspace{10pt}
+						\begin{tikzpicture}[scale=1.42, baseline=(current bounding box.north)]
+							\node[font=\bfseries\small, PosterRed] at (3,3.5) {hash-grid MLP, $O(1)$};
+							\draw[gray!60] (0,0) grid (3,3);
+							\fill[PosterRed] (1.5,1.5) circle (2pt);
+							\foreach \y in {0.5,1.5,2.5} \fill[PosterBlue!15!white,draw=PosterBlue] (3.9,\y) circle (8pt);
+							\foreach \y in {0.9,2.1} \fill[PosterBlue!15!white,draw=PosterBlue] (4.9,\y) circle (8pt);
+							\fill[PosterBlue!15!white,draw=PosterBlue] (5.9,1.5) circle (8pt);
+							\foreach \y in {0.5,1.5,2.5} \foreach \yy in {0.9,2.1}
+								\draw[gray!50,thin] (3.9,\y) -- (4.9,\yy);
+							\foreach \yy in {0.9,2.1}
+								\draw[gray!50,thin] (4.9,\yy) -- (5.9,1.5);
+							\foreach \y in {0.5,1.5,2.5}
+								\draw[gray!50,thin] (1.5,1.5) -- (3.9,\y);
+						\end{tikzpicture}
+					\end{column}
+					\begin{column}{0.32\colwidthright}
+						\centering
+						\begin{tikzpicture}[scale=2.5, baseline=(current bounding box.north)]
+							\draw[gray!40,-{Latex[length=2mm]}] (-1.6,0) -- (1.6,0) node[right,font=\small] {Re};
+							\draw[gray!40,-{Latex[length=2mm]}] (0,-1.6) -- (0,1.6) node[above,font=\small] {Im};
+							\draw[dashed, PosterNavy, thick] (0,0) circle (1);
+							\foreach \p in {(1.25,0.55),(-0.4,1.35),(1.4,-0.35),(-1.3,-0.6),(0.3,1.5)}
+								\fill[PosterRed] \p circle (2.5pt);
+							\node[below,font=\small] at (0,-1.7) {$\rho(A) \ge 1$: diverges};
+						\end{tikzpicture}
+					\end{column}
+					\begin{column}{0.32\colwidthright}
+						\centering
+						\begin{tikzpicture}[scale=2.5, baseline=(current bounding box.north)]
+							\draw[gray!40,-{Latex[length=2mm]}] (-1.6,0) -- (1.6,0) node[right,font=\small] {Re};
+							\draw[gray!40,-{Latex[length=2mm]}] (0,-1.6) -- (0,1.6) node[above,font=\small] {Im};
+							\draw[dashed, PosterNavy, thick] (0,0) circle (1);
+							\foreach \p in {(0.55,0.3),(-0.4,0.35),(0.45,-0.4),(-0.3,-0.35)}
+								\fill[PosterBlue] \p circle (2.5pt);
+							\node[below,font=\small] at (0,-1.7) {after $\omega$-shift: $\rho(M) < 1$};
+						\end{tikzpicture}
+					\end{column}
+				\end{columns}
+
+				\begin{tikzpicture}[remember picture, overlay]
+					\draw[->, PosterRed, thick] (mu.south) to[out=-90, in=90] (cachedas.north);
+				\end{tikzpicture}
+
+				\vspace{0.5ex}
 				\begin{eqbox}
 					\begin{align*}
 						\mu^{n+1} &= \mu^n - \omega\left[(I-A)\mu^n - b\right] \\
@@ -211,29 +276,6 @@
 						\widehat{A\mu^n} &= \frac{K(x,y)\,\mu^n(y)}{p(y)}, \qquad y \sim p
 					\end{align*}
 				\end{eqbox}
-
-				\begin{figure}
-					\centering
-					\begin{tikzpicture}[scale=1.05]
-						\draw[gray!40] (-1.6,0) -- (2.3,0);
-						\draw[gray!40] (0,-1.5) -- (0,1.5);
-						\draw[dashed, BlockHeader] (1,0) circle (1);
-						\fill[BlockHeader] (1,0) circle (1.2pt);
-						\foreach \p in {(1.9,0.9),(2.1,-0.5),(1.5,-1.2),(-1.0,0.6),(2.3,0.4)}
-							\fill[red!70!black] \p circle (2.5pt);
-						\node[below] at (0.3,-1.6) {\small $\rho(A) \ge 1$: diverges};
-					\end{tikzpicture}
-					\hspace{2cm}
-					\begin{tikzpicture}[scale=1.05]
-						\draw[gray!40] (-1.6,0) -- (2.3,0);
-						\draw[gray!40] (0,-1.5) -- (0,1.5);
-						\draw[dashed, BlockHeader] (1,0) circle (1);
-						\fill[BlockHeader] (1,0) circle (1.2pt);
-						\foreach \p in {(1.3,0.4),(0.7,-0.3),(1.4,-0.2),(0.9,0.5)}
-							\fill[blue!60!black] \p circle (2.5pt);
-						\node[below] at (0.3,-1.6) {\small after $\omega$-shift: $\rho(M) < 1$};
-					\end{tikzpicture}
-				\end{figure}
 
 				{\small\itshape A complex $\omega$ rotates and rescales the spectrum of $I-A$ into the unit disk about $1$ --- the stochastic analog of the CBS $\varepsilon$-shift \parencite{Osnabrugge2016}.}
 
